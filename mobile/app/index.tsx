@@ -15,17 +15,15 @@ import {
 export default function App() {
   const [facing, setFacing] = useState<CameraType>("back");
   const [permission, requestPermission] = useCameraPermissions();
-  const [geminiResult, setGeminiResult] = useState<string | null>(null);
+  const [drowsinessResult, setDrowsinessResult] = useState<string | null>(null);
   const cameraRef = useRef<any>(null);
 
   useEffect(() => {
     if (!permission?.granted) return;
-
     const interval = setInterval(() => {
       analyzeImage();
-    }, 10000); // Take a photo every 3 seconds
-
-    return () => clearInterval(interval); // Cleanup on unmount
+    }, 15000);
+    return () => clearInterval(interval);
   }, [permission?.granted]);
 
   if (!permission) {
@@ -51,14 +49,15 @@ export default function App() {
       return;
     }
     try {
+      // Capture a photo with base64 encoding
       const photo = await cameraRef.current.takePictureAsync({ base64: true });
       if (!photo.base64) {
         console.log("No image captured");
         return;
       }
 
-      // Send image to your Gemini server
-      const response = await fetch("http://192.168.29.186:9000/analyze-image", {
+      // Send the image to your hosted model endpoint
+      const response = await fetch("http://192.168.29.186:3500/predict", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imageBase64: photo.base64 }),
@@ -66,7 +65,7 @@ export default function App() {
 
       const result = await response.json();
       if (response.ok) {
-        setGeminiResult(result.geminiAnalysis);
+        setDrowsinessResult(result.prediction);
       } else {
         Alert.alert("Server Error", result.error || "Unknown error");
       }
@@ -89,9 +88,11 @@ export default function App() {
           </TouchableOpacity>
         </View>
       </CameraView>
-      {geminiResult && (
+      {drowsinessResult && (
         <View style={styles.resultContainer}>
-          <Text style={styles.resultText}>Gemini says: {geminiResult}</Text>
+          <Text style={styles.resultText}>
+            Drowsiness prediction: {drowsinessResult}
+          </Text>
         </View>
       )}
     </View>
