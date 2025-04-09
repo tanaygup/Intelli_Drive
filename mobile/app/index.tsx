@@ -12,6 +12,8 @@ import {
   useCameraPermissions,
 } from "expo-camera";
 
+import axios from "axios";
+
 export default function App() {
   const [facing, setFacing] = useState<CameraType>("back");
   const [permission, requestPermission] = useCameraPermissions();
@@ -22,7 +24,7 @@ export default function App() {
     if (!permission?.granted) return;
     const interval = setInterval(() => {
       analyzeImage();
-    }, 15000);
+    }, 10000);
     return () => clearInterval(interval);
   }, [permission?.granted]);
 
@@ -57,18 +59,29 @@ export default function App() {
       }
 
       // Send the image to your hosted model endpoint
-      const response = await fetch("http://192.168.29.186:3500/predict", {
+      const response = await fetch("http://192.168.29.186:9000/predict", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imageBase64: photo.base64 }),
       });
 
       const result = await response.json();
-      if (response.ok) {
-        setDrowsinessResult(result.prediction);
+      const analysis = result.prediction?.toLowerCase().trim();
+      setDrowsinessResult(analysis);
+      if (analysis === "sleepy") {
+        await axios.post("http://192.168.29.186:3000/trigger", {
+          command: "TRIGGER",
+        });
+        console.log("Sleepy detected → Alarm triggered");
+      } else if (analysis === "alert") {
+        await axios.post("http://192.168.29.186:3000/trigger", {
+          command: "START",
+        });
+        console.log("Alert detected → Vehicle started");
       } else {
-        Alert.alert("Server Error", result.error || "Unknown error");
+        console.warn("Unexpected response:", analysis);
       }
+     
     } catch (error: any) {
       console.error("analyzeImage error:", error);
       Alert.alert("Error", error.message);

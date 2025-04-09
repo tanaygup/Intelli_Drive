@@ -71,13 +71,13 @@ def predict():
         # Use the same condition as your original code:
         # Both eyes closed if the predicted index equals 2
         if status1 == 2 and status2 == 2:
-            return jsonify({"prediction": "Drowsy"})
+            return jsonify({"prediction": "sleepy"})
         elif status1 == -1 or status2 == -1:
             return jsonify({"error": "Eyes not detected"}), 400
         else:
-            return jsonify({"prediction": "Not Drowsy"})
+            return jsonify({"prediction": "alert"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=3500)
+    app.run(host="0.0.0.0", port=9000)
