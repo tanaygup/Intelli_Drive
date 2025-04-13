@@ -1,9 +1,11 @@
 
 import React, { useRef, useState, useEffect } from "react";
+import { useRouter } from "expo-router";
 import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  FlatList,
   View,
   Alert,
 } from "react-native";
@@ -16,13 +18,53 @@ import {
 import axios from "axios";
 
 export default function App() {
+  const router = useRouter();
   const [facing, setFacing] = useState<CameraType>("back");
+  const [isAdmin,setIsAdmin]= useState<boolean>(true);
   const [permission, requestPermission] = useCameraPermissions();
   const [drowsinessResult, setDrowsinessResult] = useState<string | null>(null);
   const cameraRef = useRef<any>(null);
+  const driver=[
+    {
+      id:1,
+      img:"",
+      name:"chirag singhal",
+      rating:"5"
+    },
+    {
+      id:2,
+      img:"",
+      name:"tanay gupta",
+      rating:"3"
+    },
+    {
+      id:3,
+      img:"",
+      name:"vedant mahajan",
+      rating:"4"
+    }
+  ]
+  const handleEdit = (id: number) => {
+    console.log(`Edit driver ${id}`);
+  };
+
+  const handleDelete = (id: number) => {
+    console.log(`Delete driver ${id}`);
+  };
+
+  const handleInfo = (driver: any) => {
+    router.push({
+      pathname: "/driverInfo",
+      params: {
+        id: driver.id.toString(),
+        name: driver.name,
+        rating: driver.rating,
+      },
+    })
+  };
 
   useEffect(() => {
-    if (!permission?.granted) return;
+    if (!permission?.granted || isAdmin) return;
     const interval = setInterval(() => {
       analyzeImage();
     }, 10000000);
@@ -93,6 +135,42 @@ export default function App() {
     setFacing((current) => (current === "back" ? "front" : "back"));
   }
 
+  const renderDriver = ({ item }: any) => (
+    <View style={styles.card}>
+      <View style={styles.cardTop}>
+        <Text style={styles.driverName}>{item.name}</Text>
+        <Text style={styles.rating}>⭐ {item.rating}</Text>
+      </View>
+      <View style={styles.cardBottom}>
+        <TouchableOpacity onPress={() => handleEdit(item.id)}>
+          <Text style={styles.editbutton}>Edit</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handleDelete(item.id)}>
+          <Text style={styles.deletebutton}>Delete</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handleInfo(item.id)}>
+          <Text style={styles.infobutton} onPress={()=>handleInfo(item)}>Info</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+
+  if(isAdmin){
+    return(
+      <View style={styles.container}>
+      <FlatList
+        data={driver}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={renderDriver}
+        contentContainerStyle={{ paddingBottom: 50,margin:10 }}
+      />
+    </View>
+
+    );
+  }
+
+
   return (
     <View style={styles.container}>
       <CameraView style={styles.camera} facing={facing} ref={cameraRef}>
@@ -114,6 +192,44 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
+  admincontainer:{
+    padding: 20,
+    margin:10,
+    paddingTop: 40,
+    backgroundColor: "#fff",
+    flex: 1,
+  },
+  title:{
+    fontSize: 24,
+    fontWeight: "bold",
+    alignSelf: "center",
+    marginBottom: 20,
+    fontFamily: "Cochin", 
+  },
+  card: {
+    borderWidth: 2,
+    borderRadius: 15,
+    borderColor: "#000",
+    padding: 16,
+    marginBottom: 16,
+    backgroundColor: "#f9f9f9",
+  },
+  cardTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  driverName: {
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  rating: {
+    fontSize: 16,
+  },
+  cardBottom: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+  },
   container: {
     flex: 1,
     justifyContent: "center",
@@ -131,6 +247,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "transparent",
     marginBottom: 20,
+  },
+  editbutton: {
+    backgroundColor: "#FFA500",
+    padding: 10,
+    marginVertical: 5,
+    borderRadius: 5,
+  },
+  deletebutton: {
+    backgroundColor: "#FF0000",
+    padding: 10,
+    marginVertical: 5,
+    borderRadius: 5,
+  },
+  infobutton: {
+    backgroundColor: "#008000",
+    padding: 10,
+    marginVertical: 5,
+    borderRadius: 5,
   },
   button: {
     backgroundColor: "#00000080",
