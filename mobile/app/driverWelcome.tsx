@@ -1,26 +1,22 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 
-export default function HomeScreen() {
+export default function DriverWelcome() {
   const router = useRouter();
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>IntelliDrive</Text>
+      <Text style={styles.title}>Welcome to IntelliDrive</Text>
+      <Text style={styles.subtitle}>
+        Check your alcohol level before starting your ride
+      </Text>
 
       <TouchableOpacity
         style={styles.button}
-        onPress={() => router.push("./login")}
+        onPress={() => router.push("/blowTest")}
       >
-        <Text style={styles.buttonText}>Sign In</Text>
+        <Text style={styles.buttonText}>Blow</Text>
       </TouchableOpacity>
-
-      {/* <TouchableOpacity
-        style={styles.button}
-        onPress={() => router.push("/(tabs)/dashboard")}
-      >
-        <Text style={styles.buttonText}>Sign In as Driver</Text>
-      </TouchableOpacity> */}
     </View>
   );
 }
@@ -30,23 +26,24 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff",
-    padding: 20,
+    padding: 24,
   },
   title: {
-    fontSize: 32,
+    fontSize: 26,
     fontWeight: "bold",
-    marginBottom: 40,
-    color: "#333",
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  subtitle: {
+    fontSize: 16,
+    textAlign: "center",
+    marginBottom: 32,
   },
   button: {
     backgroundColor: "#007AFF",
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
-    marginVertical: 10,
-    width: "80%",
-    alignItems: "center",
   },
   buttonText: {
     color: "#fff",
