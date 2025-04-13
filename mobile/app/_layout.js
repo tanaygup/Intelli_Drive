@@ -1,4 +1,19 @@
+import React, { useEffect } from "react";
 import { Stack } from "expo-router";
-export default function Layout() {
-  return <Stack />;
+import { Platform } from "react-native";
+
+export default function RootLayout() {
+
+
+
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+    </Stack>
+  );
 }

@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect } from "react";
 import {
   StyleSheet,
@@ -24,7 +25,7 @@ export default function App() {
     if (!permission?.granted) return;
     const interval = setInterval(() => {
       analyzeImage();
-    }, 10000);
+    }, 10000000);
     return () => clearInterval(interval);
   }, [permission?.granted]);
 
