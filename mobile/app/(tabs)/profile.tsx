@@ -1,35 +1,116 @@
-import { View, Text, Image, StyleSheet } from "react-native";
+import { View, Text, Image, StyleSheet, ActivityIndicator, ScrollView } from "react-native";
+import { useEffect, useState } from "react";
+import { auth, db } from "../../firebaseConfig";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 
 export default function ProfilePage() {
+  const [userData, setUserData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [drivers, setDrivers] = useState<any[]>([]);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          const userDocRef = doc(db, "users", user.uid);
+          const userSnap = await getDoc(userDocRef);
+
+          if (userSnap.exists()) {
+            const userInfo = userSnap.data();
+            if (userInfo.role === "admin") {
+              // Fetch drivers under this admin
+              const q = query(collection(db, "drivers"), where("owner", "==", user.uid));
+              const querySnapshot = await getDocs(q);
+              const driverList = querySnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+              }));
+              setDrivers(driverList);
+            }
+            setUserData({ ...userInfo, id: user.uid });
+          } else {
+            // Check if user is a driver
+            const driverDocRef = doc(db, "drivers", user.uid);
+            const driverSnap = await getDoc(driverDocRef);
+            if (driverSnap.exists()) {
+              const driverInfo = driverSnap.data();
+              setUserData({ ...driverInfo, id: user.uid });
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#000" />
+      </View>
+    );
+  }
+
+  if (!userData) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.name}>User not found or not signed in.</Text>
+      </View>
+    );
+  }
+
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Image
-        source={{ uri: "https://randomuser.me/api/portraits/men/75.jpg" }}
+        source={{ uri: userData.photoURL }}
         style={styles.avatar}
       />
-      <Text style={styles.name}>Chirag Mehta</Text>
-      <Text style={styles.email}>chirag.mehta@example.com</Text>
-      <Text style={styles.bio}>
-        Full-stack developer | Tech enthusiast | Coffee lover ☕
-      </Text>
+      <Text style={styles.name}>{userData.username || "No Name"}</Text>
+      <Text style={styles.email}>{userData.email || "No Email"}</Text>
 
-      <View style={styles.detailsContainer}>
-        <Text style={styles.detailLabel}>Location:</Text>
-        <Text style={styles.detailValue}>Mumbai, India</Text>
+      {userData.role === "admin" ? (
+        <View style={styles.detailsContainer}>
+          <Text style={styles.detailLabel}>Role:</Text>
+          <Text style={styles.detailValue}>Admin</Text>
 
-        <Text style={styles.detailLabel}>Joined:</Text>
-        <Text style={styles.detailValue}>April 2023</Text>
+          <Text style={styles.detailLabel}>Number of Drivers:</Text>
+          <Text style={styles.detailValue}>{drivers.length}</Text>
 
-        <Text style={styles.detailLabel}>Followers:</Text>
-        <Text style={styles.detailValue}>1.2k</Text>
-      </View>
-    </View>
+          <Text style={styles.detailLabel}>Drivers List:</Text>
+          {drivers.map((driver, index) => (
+            <View key={index} style={styles.driverCard}>
+              <Text style={styles.driverName}>{driver.name || "Driver"}</Text>
+              
+            </View>
+          ))}
+        </View>
+      ) : (
+        <View style={styles.detailsContainer}>
+          <Text style={styles.detailLabel}>Role:</Text>
+          <Text style={styles.detailValue}>Driver</Text>
+
+          <Text style={styles.detailLabel}>Rating:</Text>
+          <Text style={styles.detailValue}>{userData.rating || "N/A"}</Text>
+
+          <Text style={styles.detailLabel}>Number of Trips:</Text>
+          <Text style={styles.detailValue}>{userData.trips || "0"}</Text>
+        </View>
+      )}
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: "#f7f7f7",
     alignItems: "center",
     justifyContent: "center",
@@ -50,13 +131,6 @@ const styles = StyleSheet.create({
     color: "#888",
     marginBottom: 8,
   },
-  bio: {
-    fontSize: 14,
-    fontStyle: "italic",
-    color: "#555",
-    textAlign: "center",
-    marginBottom: 20,
-  },
   detailsContainer: {
     width: "100%",
     marginTop: 10,
@@ -70,6 +144,25 @@ const styles = StyleSheet.create({
   },
   detailValue: {
     fontSize: 14,
+    color: "#666",
+  },
+  driverCard: {
+    backgroundColor: "#fff",
+    padding: 10,
+    marginTop: 10,
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  driverName: {
+    fontWeight: "bold",
+    fontSize: 14,
+  },
+  driverEmail: {
+    fontSize: 12,
     color: "#666",
   },
 });

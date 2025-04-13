@@ -17,9 +17,10 @@ import { useRouter } from "expo-router";
 
 export default function LoginScreen() {
   const router = useRouter();
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"driver" | "admin" | null>(null); // 👥 Role state
+  const [role, setRole] = useState<"driver" | "admin" | null>(null);
 
   const handleSignIn = async () => {
     if (!role)
@@ -47,11 +48,7 @@ export default function LoginScreen() {
       }
 
       Alert.alert("Login successful!");
-      if (role === "admin") {
-        router.push("/(tabs)/dashboard");
-      } else if (role === "driver") {
-        router.push("./driverWelcome");
-      }
+      router.push("/(tabs)/dashboard");
     } catch (error: any) {
       Alert.alert("Login failed", error.message);
     }
@@ -60,6 +57,9 @@ export default function LoginScreen() {
   const handleSignUp = async () => {
     if (!role)
       return Alert.alert("Select Role", "Please choose Admin or Driver");
+
+    if (!username.trim())
+      return Alert.alert("Missing Username", "Please enter a username");
 
     try {
       const userCredential = await createUserWithEmailAndPassword(
@@ -70,7 +70,9 @@ export default function LoginScreen() {
       const uid = userCredential.user.uid;
 
       await setDoc(doc(db, "users", uid), {
+        uid,
         email,
+        username,
         role,
         createdAt: new Date().toISOString(),
       });
@@ -84,7 +86,14 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Sign In</Text>
+      <Text style={styles.title}>Sign In / Sign Up</Text>
+
+      <TextInput
+        placeholder="Username"
+        value={username}
+        onChangeText={setUsername}
+        style={styles.input}
+      />
 
       <TextInput
         placeholder="Email"
@@ -94,6 +103,7 @@ export default function LoginScreen() {
         keyboardType="email-address"
         style={styles.input}
       />
+
       <TextInput
         placeholder="Password"
         value={password}
