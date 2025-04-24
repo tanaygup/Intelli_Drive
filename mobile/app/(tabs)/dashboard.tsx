@@ -92,11 +92,13 @@ export default function App() {
 
   useEffect(() => {
     if (!permission?.granted || isAdmin !== false) return;
+  
     const interval = setInterval(() => {
       analyzeImage();
-    }, 10000000);
+    }, 10000);
+  
     return () => clearInterval(interval);
-  }, [permission?.granted]);
+  }, [permission?.granted, isAdmin]);
 
   useEffect(() => {
     if (isAdmin) {

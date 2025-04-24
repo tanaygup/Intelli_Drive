@@ -7,7 +7,7 @@ app.use(cors());
 app.use(express.json());
 
 const arduinoPort = new SerialPort({
-  path: "/dev/tty.usbmodem1401", // Update your port accordingly
+  path: "/dev/tty.usbmodem1301", // Update your port accordingly
   baudRate: 9600,
   autoOpen: false,
 });
